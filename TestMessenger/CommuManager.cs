@@ -48,7 +48,6 @@ namespace messenger
         private TextBox myTb;
         private EnqChecker MsgChecker;
         private BlockingCollection<byte[]> msgQueue;
-        private Timer TimerForCheckSensor { get; set; }
 
         public CommuManager(string port, MainWindow mainWindow)
         {
@@ -84,6 +83,14 @@ namespace messenger
 
             MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
             MsgChecker.MsgrDone += GotMsg;
+
+            Task.Factory.StartNew(() =>
+            {
+                foreach (byte[] msg in msgQueue.GetConsumingEnumerable())
+                {
+                    Send(msg);
+                }
+            });
         }
 
         // The `onTick` method will be called periodically unless cancelled.
@@ -126,7 +133,7 @@ namespace messenger
         {
             var str = GenerateRandomString();
 
-            Send(Encoding.ASCII.GetBytes(str));
+            msgQueue.Add(Encoding.ASCII.GetBytes(str));
         }
 
         private string GenerateRandomString()
