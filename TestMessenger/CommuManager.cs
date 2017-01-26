@@ -62,8 +62,8 @@ namespace messenger
 
             MyPortName = port;
             MyBaudRate = 115200;
-            MyWriteTimeout = 500;
-            MyReadTimeout = 5000;
+            MyWriteTimeout = 50;
+            MyReadTimeout = 100;
             MyStopBits = StopBits.One;
             MyDataBits = 8;
             MyParity = Parity.None;
