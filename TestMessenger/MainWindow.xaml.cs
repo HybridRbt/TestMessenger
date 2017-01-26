@@ -46,5 +46,10 @@ namespace TestMessenger
             var msg = Encoding.ASCII.GetBytes(MsgContent.Text);
             cm.Send(msg);
         }
+
+        private void OnAskSensorBtnClick(object sender, RoutedEventArgs e)
+        {
+            cm.StartAskSensor();
+        }
     }
 }

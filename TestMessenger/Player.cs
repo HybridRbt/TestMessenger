@@ -19,8 +19,13 @@ namespace TestMessenger
 
         public void Display(string msg)
         {
-            Application.Current.Dispatcher.BeginInvoke(new ThreadStart(() => myTb.Text += msg));
+            //ClearDisplay();
+            Application.Current.Dispatcher.BeginInvoke(new ThreadStart(() => myTb.Text = msg));
         }
 
+        private void ClearDisplay()
+        {
+            myTb.Text = "";
+        }
     }
 }

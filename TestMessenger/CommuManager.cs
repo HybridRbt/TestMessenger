@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace messenger
 {
@@ -45,9 +47,12 @@ namespace messenger
         private MainWindow myMainWindow;
         private TextBox myTb;
         private EnqChecker MsgChecker;
+        private BlockingCollection<byte[]> msgQueue;
+        private Timer TimerForCheckSensor { get; set; }
 
         public CommuManager(string port, MainWindow mainWindow)
         {
+            msgQueue = new BlockingCollection<byte[]>();
             myMainWindow = mainWindow;
 
             myTb = mainWindow.DisplayWindow;
@@ -81,10 +86,66 @@ namespace messenger
             MsgChecker.MsgrDone += GotMsg;
         }
 
+        // The `onTick` method will be called periodically unless cancelled.
+        private static async Task RunPeriodicAsync(Action onTick,
+                                                   TimeSpan dueTime,
+                                                   TimeSpan interval,
+                                                   CancellationToken token)
+        {
+            // Initial wait time before we begin the periodic loop.
+            if (dueTime > TimeSpan.Zero)
+                await Task.Delay(dueTime, token);
+
+            // Repeat this loop until cancelled.
+            while (!token.IsCancellationRequested)
+            {
+                // Call our onTick function.
+                onTick?.Invoke();
+
+                // Wait to repeat again.
+                if (interval > TimeSpan.Zero)
+                    await Task.Delay(interval, token);
+            }
+        }
+
+        private async void Initialize()
+        {
+            var dueTime = TimeSpan.FromSeconds(2);
+            var interval = TimeSpan.FromSeconds(1);
+
+            // TODO: Add a CancellationTokenSource and supply the token here instead of None.
+            await RunPeriodicAsync(OnTick, dueTime, interval, CancellationToken.None);
+        }
+
+        public void StartAskSensor()
+        {
+            Initialize();
+        }
+
+        public void OnTick()
+        {
+            var str = GenerateRandomString();
+
+            Send(Encoding.ASCII.GetBytes(str));
+        }
+
+        private string GenerateRandomString()
+        {
+            var result = "";
+            var randomNum = new Random();
+            for (int i = 0; i < 3; i++)
+            {
+                result += randomNum.Next(0, 9).ToString();
+            }
+
+            return result;
+        }
+
         private void GotMsg()
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Got Msg Success!");
+            MySerialPort.DataReceived += MsgChecker.Receive;
         }
 
         private void SentSuccess()

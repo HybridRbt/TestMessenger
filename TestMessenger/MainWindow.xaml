@@ -24,6 +24,7 @@
         <TextBlock Height="23" Margin="14,306,0,0" x:Name="textBlock3_Copy7" Text="Msg Got" VerticalAlignment="Top" HorizontalAlignment="Left" Width="90" />
         <TextBox Height="23" HorizontalAlignment="Left" Margin="115,333,0,0" x:Name="AckSent" VerticalAlignment="Top" Width="80" />
         <TextBlock Height="23" Margin="117,306,0,0" x:Name="textBlock3_Copy8" Text="Ack Sent" VerticalAlignment="Top" HorizontalAlignment="Left" Width="90" />
+        <Button Content="Ask Sensor" HorizontalAlignment="Left" Margin="63,71,0,0" VerticalAlignment="Top" Width="75" Click="OnAskSensorBtnClick"/>
 
     </Grid>
 </Window>
