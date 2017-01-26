@@ -42,20 +42,24 @@ namespace messenger
 
         private CommunicationStages _comState;
 
+        private MainWindow myMainWindow;
         private TextBox myTb;
+        private EnqChecker MsgChecker;
 
-        public CommuManager(string port, TextBox tb)
+        public CommuManager(string port, MainWindow mainWindow)
         {
-            myTb = tb;
-            this.myTb.Text += "Initializing...\n";
+            myMainWindow = mainWindow;
+
+            myTb = mainWindow.DisplayWindow;
+            myTb.Text += "Initializing...\n";
             
             _comState = CommunicationStages.Standby;
-            this.myTb.Text += "Current commu stage: " + _comState + "\n";
+            myTb.Text += "Current commu stage: " + _comState + "\n";
 
             MyPortName = port;
             MyBaudRate = 115200;
-            MyWriteTimeout = 50;
-            MyReadTimeout = 200;
+            MyWriteTimeout = 500;
+            MyReadTimeout = 5000;
             MyStopBits = StopBits.One;
             MyDataBits = 8;
             MyParity = Parity.None;
@@ -68,36 +72,33 @@ namespace messenger
                 RtsEnable = true
             };
 
-            MySerialPort.DataReceived += Receive;
-
             if (!MySerialPort.IsOpen)
             {
                 MySerialPort.Open();
             }
+
+            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
+            MsgChecker.MsgrDone += GotMsg;
         }
 
-        private void Receive(object sender, SerialDataReceivedEventArgs e)
+        private void GotMsg()
         {
-            const string errorHappenedMsg = "Error Happened!";
-            var length = MySerialPort.BytesToRead;
-            //var msggot = MySerialPort.ReadByte();
-            //if it's ENQ, create a receiver, delegate port to it
-            if (length <= 0)
-            {
-                MySerialPort.DiscardInBuffer();
-                return;
-            }
-
-            //Application.Current.Dispatcher.BeginInvoke(new ThreadStart(() => this.myTb.Text = "Got ENQ"));
-            
-            MySerialPort.DataReceived -= Receive;
-            var receiver = new Msgr(MySerialPort, this.myTb);
+            var player = new Player(myMainWindow.DisplayWindow);
+            player.Display("Got Msg Success!");
         }
- 
+
+        private void SentSuccess()
+        {
+            var player = new Player(myMainWindow.DisplayWindow);
+            player.Display("Sent Msg Success!");
+            MySerialPort.DataReceived += MsgChecker.Receive;
+        }
+
         public void Send(byte[] msg)
         {
-            var sender = new Msgr(MySerialPort, this.myTb);
-            sender.SendMsg(msg);
+            MySerialPort.DataReceived -= MsgChecker.Receive;
+            var sender = new Sender(MySerialPort, msg, myMainWindow);
+            sender.MsgrDone += SentSuccess;
         }
     }
 }

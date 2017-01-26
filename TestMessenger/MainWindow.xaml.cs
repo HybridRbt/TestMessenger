@@ -23,22 +23,28 @@ namespace TestMessenger
     /// </summary>
     public partial class MainWindow : Window
     {
-        private CommuManager instance1;
-        private CommuManager instance2;
+        private string PortName;
+
+        private CommuManager cm;
 
         public MainWindow()
         {
             InitializeComponent();
-            Settings.Default.PCPort = "COM2";
-            Settings.Default.SBPort = "COM3";
         }
 
-        private void OnTextBox5KeyDownHandler(object sender, KeyEventArgs e)
+        private void OnComPortNameKeyDownHandler(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Return) return;
-            byte[] msg = new byte[1];
-            msg[0] = Convert.ToByte(this.textBox5.Text);
-            this.instance1.Send(msg);
+            PortName = "COM";
+            PortName += ComPortName.Text;
+            cm = new CommuManager(PortName, this);
+        }
+
+        private void OnMsgContentKeyDownHandler(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Return) return;
+            var msg = Encoding.ASCII.GetBytes(MsgContent.Text);
+            cm.Send(msg);
         }
     }
 }

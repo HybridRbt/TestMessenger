@@ -55,6 +55,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="EnqChecker.cs" />
+    <Compile Include="EotChecker.cs" />
+    <Compile Include="MsgReceiver.cs" />
+    <Compile Include="MsgSender.cs" />
+    <Compile Include="Player.cs" />
+    <Compile Include="Sender.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -65,6 +71,7 @@
     </Compile>
     <Compile Include="Cmd.cs" />
     <Compile Include="CommuManager.cs" />
+    <Compile Include="IMsgr.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
