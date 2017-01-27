@@ -18,11 +18,22 @@ namespace TestMessenger
 
         public void Receive(object sender, SerialDataReceivedEventArgs e)
         {
-            var msggot = Port.ReadByte();
+            int msggot;
+
+            try
+            {
+                msggot = Port.ReadByte();
+            }
+            catch (TimeoutException timeoutException)
+            {
+                Port.DataReceived -= Receive;
+                OnMsgrFailed();
+                return;
+            }
 
             if (msggot != Cmd.EotReadyReceive)
             {
-                //Port.DiscardInBuffer();
+                Port.DiscardInBuffer();
                 return;
             }
 
