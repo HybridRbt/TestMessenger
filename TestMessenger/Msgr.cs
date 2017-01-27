@@ -12,11 +12,20 @@ namespace TestMessenger
 
         public delegate void MsgrDoneEventHandler();
 
-        public event MsgReceiver.MsgrDoneEventHandler MsgrDone;
+        public event MsgrDoneEventHandler MsgrDone;
+
+        public delegate void MsgrFailedEventHandler();
+
+        public event MsgrFailedEventHandler MsgrFailed;
 
         protected virtual void OnMsgrDone()
         {
             MsgrDone?.Invoke();
+        }
+
+        protected virtual void OnMsgrFailed()
+        {
+            MsgrFailed?.Invoke();
         }
 
         public Msgr(SerialPort myPort, MainWindow mainWindow)
@@ -53,5 +62,7 @@ namespace TestMessenger
                 Console.WriteLine(comPortIsNotOpenMsg);
             }
         }
+
+
     }
 }
