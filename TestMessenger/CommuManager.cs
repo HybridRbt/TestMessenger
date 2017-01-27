@@ -131,18 +131,18 @@ namespace messenger
 
         public void OnTick()
         {
-            var str = GenerateRandomString();
+            var byteArray = GenerateRandomByteArray();
 
-            msgQueue.Add(Encoding.ASCII.GetBytes(str));
+            msgQueue.Add(byteArray);
         }
 
-        private string GenerateRandomString()
+        private byte[] GenerateRandomByteArray()
         {
-            var result = "";
+            byte[] result = new byte[3];
             var randomNum = new Random();
             for (int i = 0; i < 3; i++)
             {
-                result += randomNum.Next(0, 9).ToString();
+                result[i] = Convert.ToByte(randomNum.Next(0, 9));
             }
 
             return result;
@@ -152,14 +152,18 @@ namespace messenger
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Got Msg Success!");
-            MySerialPort.DataReceived += MsgChecker.Receive;
+
+            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
+            MsgChecker.MsgrDone += GotMsg;
         }
 
         private void SentSuccess()
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Sent Msg Success!");
-            MySerialPort.DataReceived += MsgChecker.Receive;
+
+            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
+            MsgChecker.MsgrDone += GotMsg;
         }
 
         public void Send(byte[] msg)
@@ -167,6 +171,33 @@ namespace messenger
             MySerialPort.DataReceived -= MsgChecker.Receive;
             var sender = new Sender(MySerialPort, msg, myMainWindow);
             sender.MsgrDone += SentSuccess;
+            sender.MsgrFailed += SendFailed;
+        }
+
+        private void SendFailed()
+        {
+            var player = new Player(myMainWindow.DisplayWindow);
+            player.Display("Sent Msg Failed!");
+
+            //MySerialPort.Close();
+            //MySerialPort.Dispose();
+       /*     MySerialPort = new SerialPort(MyPortName, MyBaudRate, MyParity, MyDataBits, MyStopBits)
+            {
+                ReadTimeout = MyReadTimeout,
+                WriteTimeout = MyWriteTimeout,
+                DtrEnable = true,
+                RtsEnable = true
+            };
+
+            if (!MySerialPort.IsOpen)
+            {
+                MySerialPort.Open();
+            }*/
+
+            //MySerialPort.DiscardInBuffer();
+            //MySerialPort.DiscardOutBuffer();
+            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
+            MsgChecker.MsgrDone += GotMsg;
         }
     }
 }
