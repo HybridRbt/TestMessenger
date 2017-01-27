@@ -17,15 +17,42 @@ namespace TestMessenger
 
         public void Receive(object sender, SerialDataReceivedEventArgs e)
         {
-            var msggot = Port.ReadExisting();
+            var length = Port.BytesToRead;
+
+            var msggot = ReadAllBytes(Port, length);
+
             var player = new Player(MyMainWindow.MsgGot);
-            player.Display(msggot);
+            var msgStr = GenerateStringFromByteArray(msggot);
+            player.Display(msgStr);
 
             //done, unsub from port
+            Port.DiscardInBuffer();
             Port.DataReceived -= Receive;
 
             SendAck();
             OnMsgrDone();
+        }
+
+        private byte[] ReadAllBytes(SerialPort port, int length)
+        {
+            byte[] result = new byte[length];
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = Convert.ToByte(Port.ReadByte());
+            }
+            return result;
+        }
+
+        private string GenerateStringFromByteArray(byte[] msg)
+        {
+            var result = "";
+
+            for (int i = 0; i < msg.Length; i++)
+            {
+                result += msg[i].ToString();
+            }
+
+            return result;
         }
 
         private void SendAck()

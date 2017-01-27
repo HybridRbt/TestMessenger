@@ -15,16 +15,28 @@ namespace TestMessenger
             myPort.DataReceived += Receive;
             Msg = msg;
             SendMsg(msg);
+            var player = new Player(MyMainWindow.MsgSent);
+            var msgStr = GenerateStringFromByteArray(Msg);
+            player.Display(msgStr);
         }
 
         public void Receive(object sender, SerialDataReceivedEventArgs e)
         {
-            var msggot = Port.ReadByte();
+            int msggot;
+
+            try
+            {
+                msggot = Port.ReadByte();
+            }
+            catch (TimeoutException timeoutException)
+            {
+                return;
+            }
 
             //check for ack
             if (msggot != Cmd.AckReceiveOk)
             {
-                //Port.DiscardInBuffer();
+                Port.DiscardInBuffer();
                 return;
             }
 
@@ -34,12 +46,21 @@ namespace TestMessenger
             var player = new Player(MyMainWindow.AckGot);
             player.Display(msggot.ToString());
 
-            player = new Player(MyMainWindow.MsgSent);
-            player.Display(Convert.ToString(Msg));
-
             //unsub from port, report done
             Port.DataReceived -= Receive;
             OnMsgrDone();
+        }
+
+        private string GenerateStringFromByteArray(byte[] msg)
+        {
+            var result = "";
+
+            for (int i = 0; i < msg.Length; i++)
+            {
+                result += msg[i].ToString();
+            }
+
+            return result;
         }
     }
 }

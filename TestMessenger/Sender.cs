@@ -23,9 +23,15 @@ namespace TestMessenger
 
             //sub to done event
             eotChkr.MsgrDone += MsgSent;
-
+            eotChkr.MsgrFailed += SendFailed;
+            
             //send enq
             SendEnq();
+        }
+
+        private void SendFailed()
+        {
+            OnMsgrFailed();
         }
 
         private void MsgSent()
