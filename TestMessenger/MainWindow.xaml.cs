@@ -37,5 +37,10 @@ namespace TestMessenger
         {
             cm.StartAskSensor();
         }
+
+        private void OnStopAskSensorBtnClick(object sender, RoutedEventArgs e)
+        {
+            cm.StopAskSensor();
+        }
     }
 }
