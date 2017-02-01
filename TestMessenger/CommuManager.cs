@@ -4,7 +4,7 @@ using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace messenger
+namespace TestMessenger
 {
     using System.Windows;
     using System.Windows.Controls;
