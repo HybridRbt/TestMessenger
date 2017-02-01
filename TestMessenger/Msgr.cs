@@ -28,9 +28,9 @@ namespace TestMessenger
             MsgrFailed?.Invoke(msg);
         }
 
-        public Msgr(SerialPort myPort, MainWindow mainWindow)
+        public Msgr(CommuManager cm, MainWindow mainWindow)
         {
-            Port = myPort;
+            Port = cm.MySerialPort;
             MyMainWindow = mainWindow;
         }
 
