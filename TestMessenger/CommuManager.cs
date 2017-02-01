@@ -41,6 +41,8 @@ namespace TestMessenger
 
         private ComEventHandler comEventHandler;
         private byte[] _nextMsg;
+        private CancellationTokenSource cancelAskSensor;
+
         public CommuManager(string port, MainWindow mainWindow)
         {
             msgQueue = new BlockingCollection<byte[]>();
@@ -52,6 +54,7 @@ namespace TestMessenger
             ComState = CommunicationStages.Standby;
             myTb.Text += "Current commu stage: " + ComState + "\n";
 
+            cancelAskSensor = new CancellationTokenSource();
 
             MyPortName = port;
             MyBaudRate = 115200;
