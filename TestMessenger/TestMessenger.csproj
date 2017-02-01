@@ -58,12 +58,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="EnqChecker.cs" />
-    <Compile Include="EotChecker.cs" />
-    <Compile Include="MsgReceiver.cs" />
+    <Compile Include="ComEventHandler.cs" />
+    <Compile Include="EnqSender.cs" />
+    <Compile Include="EotSender.cs" />
+    <Compile Include="AckSender.cs" />
     <Compile Include="MsgSender.cs" />
     <Compile Include="Player.cs" />
-    <Compile Include="Sender.cs" />
+    <Compile Include="SendManager.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
