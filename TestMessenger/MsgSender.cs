@@ -8,47 +8,19 @@ namespace TestMessenger
 {
     class MsgSender: Msgr
     {
-        public byte[] Msg { get; set; }
+        private byte[] myMsg;
 
-        public MsgSender(SerialPort myPort, byte[] msg, MainWindow mw) : base(myPort, mw)
+        public MsgSender(CommuManager cm, byte[] msg, MainWindow mw) : base(cm, mw)
         {
-            myPort.DataReceived += Receive;
-            Msg = msg;
-            SendMsg(msg);
-            var player = new Player(MyMainWindow.MsgSent);
-            var msgStr = GenerateStringFromByteArray(Msg);
-            player.Display(msgStr);
+            myMsg = msg;   
         }
 
-        public void Receive(object sender, SerialDataReceivedEventArgs e)
+        public void SendMsg()
         {
-            int msggot;
-
-            try
-            {
-                msggot = Port.ReadByte();
-            }
-            catch (TimeoutException timeoutException)
-            {
-                return;
-            }
-
-            //check for ack
-            if (msggot != Cmd.AckReceiveOk)
-            {
-                Port.DiscardInBuffer();
-                return;
-            }
-
-            //if it's ack:
-            Port.DiscardInBuffer();
-            //display ack
-            var player = new Player(MyMainWindow.AckGot);
-            player.Display(msggot.ToString());
-
-            //unsub from port, report done
-            Port.DataReceived -= Receive;
-            OnMsgrDone();
+            SendMsg(myMsg);
+            var player = new Player(MyMainWindow.MsgSent);
+            var msgStr = GenerateStringFromByteArray(myMsg);
+            player.Display(msgStr);
         }
 
         private string GenerateStringFromByteArray(byte[] msg)
