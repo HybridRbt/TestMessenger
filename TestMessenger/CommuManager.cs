@@ -10,7 +10,7 @@ namespace TestMessenger
 
     class CommuManager
     {
-        private enum CommunicationStages
+        public enum CommunicationStages
         {
             Error,
             Standby,
