@@ -55,14 +55,12 @@ namespace TestMessenger
                     return;
                 }
 
-                Port.DiscardOutBuffer();
+                //Port.DiscardOutBuffer();
             }
             else
             {
                 Console.WriteLine(comPortIsNotOpenMsg);
             }
         }
-
-
     }
 }
