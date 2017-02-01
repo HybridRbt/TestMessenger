@@ -14,10 +14,7 @@ namespace TestMessenger
         {
             Error,
             Standby,
-            SentENQWaitingEOT,
-            SentMsgWaitingAck,
-            GotAckWaitingResponseENQ,
-            SentEOTWaitingMsg
+            Busy
         }
 
         private SerialPort MySerialPort { get; set; }
