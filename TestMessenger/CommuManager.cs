@@ -55,8 +55,8 @@ namespace TestMessenger
 
             MyPortName = port;
             MyBaudRate = 115200;
-            MyWriteTimeout = 50;
-            MyReadTimeout = 100;
+            MyWriteTimeout = 300;
+            MyReadTimeout = 300;
             MyStopBits = StopBits.One;
             MyDataBits = 8;
             MyParity = Parity.None;
