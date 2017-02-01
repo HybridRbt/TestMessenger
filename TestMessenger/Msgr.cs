@@ -14,7 +14,7 @@ namespace TestMessenger
 
         public event MsgrDoneEventHandler MsgrDone;
 
-        public delegate void MsgrFailedEventHandler();
+        public delegate void MsgrFailedEventHandler(byte[] msg);
 
         public event MsgrFailedEventHandler MsgrFailed;
 
@@ -23,9 +23,9 @@ namespace TestMessenger
             MsgrDone?.Invoke();
         }
 
-        protected virtual void OnMsgrFailed()
+        protected virtual void OnMsgrFailed(byte[] msg)
         {
-            MsgrFailed?.Invoke();
+            MsgrFailed?.Invoke(msg);
         }
 
         public Msgr(SerialPort myPort, MainWindow mainWindow)
