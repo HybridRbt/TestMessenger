@@ -171,21 +171,30 @@ namespace TestMessenger
             }
         }
 
-        private async void Initialize()
+        private async void InitializeAskSensorTask()
         {
             var dueTime = TimeSpan.FromSeconds(2);
             var interval = TimeSpan.FromSeconds(1);
 
             // TODO: Add a CancellationTokenSource and supply the token here instead of None.
-            await RunPeriodicAsync(OnTick, dueTime, interval, CancellationToken.None);
+            try
+            {
+                await RunPeriodicAsync(OnAskSensorTick, dueTime, interval, cancelAskSensor.Token);
+            }
+            catch (OperationCanceledException e)
+            {
+                var player = new Player(myMainWindow.DisplayWindow);
+                player.Display("Ask sensor cancelled.");
+            }
         }
 
         public void StartAskSensor()
         {
-            Initialize();
+            cancelAskSensor = new CancellationTokenSource();
+            InitializeAskSensorTask();
         }
 
-        public void OnTick()
+        public void OnAskSensorTick()
         {
             var byteArray = GenerateRandomByteArray();
 
