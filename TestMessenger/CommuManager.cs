@@ -17,7 +17,7 @@ namespace TestMessenger
             Busy
         }
 
-        private SerialPort MySerialPort { get; set; }
+        public SerialPort MySerialPort { get; set; }
 
         private string MyPortName { get; set; }
 
@@ -32,8 +32,7 @@ namespace TestMessenger
         private int MyDataBits { get; set; }
 
         private Parity MyParity { get; set; }
-
-        private CommunicationStages _comState;
+        public CommunicationStages ComState { get; set; }
 
         private MainWindow myMainWindow;
         private TextBox myTb;
