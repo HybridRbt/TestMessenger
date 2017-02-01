@@ -88,7 +88,7 @@ namespace TestMessenger
                 if (ComState != CommunicationStages.Standby) return;
                 foreach (byte[] msg in msgQueue.GetConsumingEnumerable())
                 {
-                    Send(msg);
+                    SendRequest(msg);
                 }
             });
            
