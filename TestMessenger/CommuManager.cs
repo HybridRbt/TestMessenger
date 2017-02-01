@@ -173,8 +173,8 @@ namespace TestMessenger
 
         private async void InitializeAskSensorTask()
         {
-            var dueTime = TimeSpan.FromSeconds(2);
-            var interval = TimeSpan.FromSeconds(1);
+            var dueTime = TimeSpan.FromSeconds(1);
+            var interval = TimeSpan.FromMilliseconds(500);
 
             // TODO: Add a CancellationTokenSource and supply the token here instead of None.
             try
