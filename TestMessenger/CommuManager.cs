@@ -36,9 +36,11 @@ namespace TestMessenger
 
         private MainWindow myMainWindow;
         private TextBox myTb;
-        private EnqChecker MsgChecker;
+        private EnqSender MsgChecker;
         private BlockingCollection<byte[]> msgQueue;
 
+        private ComEventHandler comEventHandler;
+        private byte[] _nextMsg;
         public CommuManager(string port, MainWindow mainWindow)
         {
             msgQueue = new BlockingCollection<byte[]>();
@@ -47,8 +49,9 @@ namespace TestMessenger
             myTb = mainWindow.DisplayWindow;
             myTb.Text += "Initializing...\n";
             
-            _comState = CommunicationStages.Standby;
-            myTb.Text += "Current commu stage: " + _comState + "\n";
+            ComState = CommunicationStages.Standby;
+            myTb.Text += "Current commu stage: " + ComState + "\n";
+
 
             MyPortName = port;
             MyBaudRate = 115200;
@@ -71,8 +74,11 @@ namespace TestMessenger
                 MySerialPort.Open();
             }
 
-            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
-            MsgChecker.MsgrDone += GotMsg;
+            comEventHandler = new ComEventHandler(this, myMainWindow);
+            comEventHandler.GotEnq += SendEot;
+            comEventHandler.GotEot += SendMsg;
+            comEventHandler.GotMsg += ReceiveMsg;
+            comEventHandler.GotAck += ReturnToStandby;
 
             Task.Factory.StartNew(() =>
             {
@@ -81,6 +87,66 @@ namespace TestMessenger
                     Send(msg);
                 }
             });
+           
+            MySerialPort.ErrorReceived += MySerialPort_ErrorReceived;
+        }
+
+        private void ReturnToStandby()
+        {
+            SentSuccess();
+            ComState = CommunicationStages.Standby;
+        }
+
+        private void SendRequest(byte[] msg)
+        {
+            _nextMsg = msg;
+            var sender = new EnqSender(this, myMainWindow);
+            sender.SendEnq();
+        }
+
+        public string GenerateStringFromByteArray(byte[] msg)
+        {
+            var result = "";
+
+            for (int i = 0; i < msg.Length; i++)
+            {
+                result += msg[i].ToString();
+            }
+
+            return result;
+        }
+
+        private void ReceiveMsg()
+        {
+            GotMsg();
+            var msgStr = GenerateStringFromByteArray(comEventHandler.MsgReceived);
+            var player = new Player(myMainWindow.MsgGot);
+            player.Display(msgStr);
+            SendAck();
+        }
+
+        private void SendAck()
+        {
+            var sender = new AckSender(this, myMainWindow);
+            sender.SendAck();
+        }
+
+        private void SendMsg()
+        {
+            var sender = new MsgSender(this, _nextMsg, myMainWindow);
+            sender.SendMsg();
+        }
+
+        private void SendEot()
+        {
+            ComState = CommunicationStages.Busy;
+            var sender = new EotSender(this, myMainWindow);
+            sender.SendEot();
+        }
+
+        private void MySerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         // The `onTick` method will be called periodically unless cancelled.
@@ -142,52 +208,46 @@ namespace TestMessenger
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Got Msg Success!");
-
-            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
-            MsgChecker.MsgrDone += GotMsg;
         }
 
         private void SentSuccess()
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Sent Msg Success!");
-
-            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
-            MsgChecker.MsgrDone += GotMsg;
         }
 
         public void Send(byte[] msg)
         {
-            MySerialPort.DataReceived -= MsgChecker.Receive;
-            var sender = new Sender(MySerialPort, msg, myMainWindow);
-            sender.MsgrDone += SentSuccess;
-            sender.MsgrFailed += SendFailed;
+            msgQueue.Add(msg);
         }
 
-        private void SendFailed()
+        private void SendFailed(byte[] msg)
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Sent Msg Failed!");
 
             //MySerialPort.Close();
             //MySerialPort.Dispose();
-       /*     MySerialPort = new SerialPort(MyPortName, MyBaudRate, MyParity, MyDataBits, MyStopBits)
-            {
-                ReadTimeout = MyReadTimeout,
-                WriteTimeout = MyWriteTimeout,
-                DtrEnable = true,
-                RtsEnable = true
-            };
+            /*     MySerialPort = new SerialPort(MyPortName, MyBaudRate, MyParity, MyDataBits, MyStopBits)
+                 {
+                     ReadTimeout = MyReadTimeout,
+                     WriteTimeout = MyWriteTimeout,
+                     DtrEnable = true,
+                     RtsEnable = true
+                 };
 
-            if (!MySerialPort.IsOpen)
-            {
-                MySerialPort.Open();
-            }*/
+                 if (!MySerialPort.IsOpen)
+                 {
+                     MySerialPort.Open();
+                 }*/
 
             //MySerialPort.DiscardInBuffer();
             //MySerialPort.DiscardOutBuffer();
-            MsgChecker = new EnqChecker(MySerialPort, myMainWindow);
-            MsgChecker.MsgrDone += GotMsg;
+        }
+
+        public void StopAskSensor()
+        {
+            cancelAskSensor.Cancel();
         }
     }
 }
