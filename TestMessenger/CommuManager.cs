@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestMessenger
 {
-    using System.Windows;
     using System.Windows.Controls;
-
-    using TestMessenger;
 
     class CommuManager
     {
