@@ -60,19 +60,19 @@ namespace TestMessenger
 
                 switch (msggot)
                 {
-                    case Cmd.EnqReadySend:
+                    case Command.EnqReadySend:
                         player = new Player(myMw.EnqGot);
-                        player.Display(Cmd.EnqReadySend.ToString());
+                        player.Display(Command.EnqReadySend.ToString());
                         OnGotEnq();
                         break;
-                    case Cmd.EotReadyReceive:
+                    case Command.EotReadyReceive:
                         player = new Player(myMw.EotGot);
-                        player.Display(Cmd.EotReadyReceive.ToString());
+                        player.Display(Command.EotReadyReceive.ToString());
                         OnGotEot();
                         break;
-                    case Cmd.AckReceiveOk:
+                    case Command.AckReceiveOk:
                         player = new Player(myMw.AckGot);
-                        player.Display(Cmd.AckReceiveOk.ToString());
+                        player.Display(Command.AckReceiveOk.ToString());
                         OnGotAck();
                         break;
                     default:
