@@ -14,6 +14,10 @@ namespace TestMessenger
         {
             Error,
             Standby,
+            SentEnqWaitEot,
+            GotEot,
+            SentEotWaitContent,
+            SentContentWaitAck,
             Busy
         }
 
