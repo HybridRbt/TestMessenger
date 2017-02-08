@@ -29,8 +29,14 @@ namespace TestMessenger
 
         public event GotMsgEventHandler GotMsg;
 
+        /// <summary>
+        /// </summary>
         public byte[] MsgReceived { get; set; }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="cm"></param>
+        /// <param name="mw"></param>
         public ComEventHandler(CommuManager cm, MainWindow mw)
         {
             myCm = cm;
@@ -39,7 +45,11 @@ namespace TestMessenger
             myMw = mw;
         }
 
-        public void Receive(object sender, SerialDataReceivedEventArgs e)
+        /// <summary>
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Receive(object sender, SerialDataReceivedEventArgs e)
         {
             var length = myPort.BytesToRead;
             Player player;

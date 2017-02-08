@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,8 +9,12 @@ namespace TestMessenger
 {
     using System.Windows.Controls;
 
-    class CommuManager
+    /// <summary>
+    /// </summary>
+    public class CommuManager
     {
+        /// <summary>
+        /// </summary>
         public enum CommunicationStages
         {
             Error,
@@ -21,10 +26,14 @@ namespace TestMessenger
             Busy
         }
 
+        /// <summary>
+        /// </summary>
         public SerialPort MySerialPort { get; set; }
 
         private string MyPortName { get; set; }
 
+        /// <summary>
+        /// </summary>
         public int MyBaudRate { get; set; }
 
         private int MyWriteTimeout { get; set; }
@@ -36,6 +45,9 @@ namespace TestMessenger
         private int MyDataBits { get; set; }
 
         private Parity MyParity { get; set; }
+
+        /// <summary>
+        /// </summary>
         public CommunicationStages ComState { get; set; }
 
         private MainWindow myMainWindow;
@@ -47,6 +59,10 @@ namespace TestMessenger
         private byte[] _nextMsg;
         private CancellationTokenSource cancelAskSensor;
 
+        /// <summary>
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="mainWindow"></param>
         public CommuManager(string port, MainWindow mainWindow)
         {
             msgQueue = new BlockingCollection<byte[]>();
@@ -99,49 +115,68 @@ namespace TestMessenger
             MySerialPort.ErrorReceived += MySerialPort_ErrorReceived;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="msggot"></param>
+        private void ReceiveMsg(byte[] msggot)
+        {
+            GotMsg();
+            var msgStr = Helper.GenerateStringFromByteArray(msggot);
+            var player = new Player(myMainWindow.MsgGot);
+            player.Display(msgStr);
+            SendAck();
+        }
+
+        /// <summary>
+        /// </summary>
         private void ReturnToStandby()
         {
             SentSuccess();
             ComState = CommunicationStages.Standby;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="msg"></param>
         private void SendRequest(byte[] msg)
         {
             _nextMsg = msg;
             var sender = new EnqSender(this, myMainWindow);
             sender.SendEnq();
-        }
 
+            // will allow 100 ms for response
+            TimeSpan maxDuration = TimeSpan.FromMilliseconds(100);
+            Stopwatch sw = Stopwatch.StartNew();
 
-            for (int i = 0; i < msg.Length; i++)
+            while (sw.Elapsed < maxDuration)
             {
-                result += msg[i].ToString();
+                // wait for the ComState to change
+                if (ComState == CommunicationStages.GotEot)
+                    break;
             }
 
-            return result;
+            // timeout 
+
         }
 
-        private void ReceiveMsg()
-        {
-            GotMsg();
-            var msgStr = GenerateStringFromByteArray(comEventHandler.MsgReceived);
-            var player = new Player(myMainWindow.MsgGot);
-            player.Display(msgStr);
-            SendAck();
-        }
-
+        /// <summary>
+        /// </summary>
         private void SendAck()
         {
             var sender = new AckSender(this, myMainWindow);
             sender.SendAck();
         }
 
+        /// <summary>
+        /// </summary>
         private void SendMsg()
         {
             var sender = new MsgSender(this, _nextMsg, myMainWindow);
             sender.SendMsg();
         }
 
+        /// <summary>
+        /// </summary>
         private void SendEot()
         {
             ComState = CommunicationStages.Busy;
@@ -154,7 +189,14 @@ namespace TestMessenger
             throw new NotImplementedException();
         }
 
-        // The `onTick` method will be called periodically unless cancelled.
+        /// <summary>
+        /// The `<paramref name="onTick"/>` method will be called periodically unless canceled.
+        /// </summary>
+        /// <param name="onTick"></param>
+        /// <param name="dueTime"></param>
+        /// <param name="interval"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
         private static async Task RunPeriodicAsync(Action onTick,
                                                    TimeSpan dueTime,
                                                    TimeSpan interval,
@@ -164,7 +206,7 @@ namespace TestMessenger
             if (dueTime > TimeSpan.Zero)
                 await Task.Delay(dueTime, token);
 
-            // Repeat this loop until cancelled.
+            // Repeat this loop until canceled.
             while (!token.IsCancellationRequested)
             {
                 // Call our onTick function.
@@ -176,12 +218,13 @@ namespace TestMessenger
             }
         }
 
+        /// <summary>
+        /// </summary>
         private async void InitializeAskSensorTask()
         {
             var dueTime = TimeSpan.FromSeconds(1);
             var interval = TimeSpan.FromMilliseconds(500);
 
-            // TODO: Add a CancellationTokenSource and supply the token here instead of None.
             try
             {
                 await RunPeriodicAsync(OnAskSensorTick, dueTime, interval, cancelAskSensor.Token);
@@ -189,35 +232,46 @@ namespace TestMessenger
             catch (OperationCanceledException e)
             {
                 var player = new Player(myMainWindow.DisplayWindow);
-                player.Display("Ask sensor cancelled.");
+                player.Display("Ask sensor canceled.");
             }
         }
 
+        /// <summary>
+        /// </summary>
         public void StartAskSensor()
         {
             cancelAskSensor = new CancellationTokenSource();
             InitializeAskSensorTask();
         }
 
-        public void OnAskSensorTick()
+        /// <summary>
+        /// </summary>
+        private void OnAskSensorTick()
         {
-            var byteArray = GenerateRandomByteArray();
+            var byteArray = TestMessenger.Helper.GenerateRandomByteArray();
 
             msgQueue.Add(byteArray);
         }
 
+        /// <summary>
+        /// </summary>
         private void GotMsg()
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Got Msg Success!");
         }
 
+        /// <summary>
+        /// </summary>
         private void SentSuccess()
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Sent Msg Success!");
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="msg"></param>
         public void Send(byte[] msg)
         {
             msgQueue.Add(msg);
@@ -247,6 +301,8 @@ namespace TestMessenger
             //MySerialPort.DiscardOutBuffer();
         }
 
+        /// <summary>
+        /// </summary>
         public void StopAskSensor()
         {
             cancelAskSensor.Cancel();

@@ -3,12 +3,20 @@ using System.IO.Ports;
 
 namespace TestMessenger
 {
-    class EnqSender: Msgr
+    /// <summary>
+    /// </summary>
+    internal class EnqSender: MessageSender	
     {
+        /// <summary>
+        /// </summary>
+        /// <param name="cm"></param>
+        /// <param name="mw"></param>
         public EnqSender(CommuManager cm, MainWindow mw) : base(cm, mw)
         {
         }
 
+        /// <summary>
+        /// </summary>
         public void SendEnq()
         {
             byte[] msg = new byte[1];
