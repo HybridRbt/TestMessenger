@@ -51,12 +51,12 @@ namespace TestMessenger
         /// <param name="e"></param>
         private void Receive(object sender, SerialDataReceivedEventArgs e)
         {
-            var length = myPort.BytesToRead;
+            var length = GetMessageLength();
             Player player;
 
             if (length == 1) //it's ENQ/EOT/ACK
             {
-                var msggot = myPort.ReadByte();
+                var msggot = GetMessageContent();
 
                 switch (msggot)
                 {
@@ -82,8 +82,26 @@ namespace TestMessenger
             player = new Player(myMw.MsgGot);
             MsgReceived = new byte[length];
             myPort.Read(MsgReceived, 0, length);
-            player.Display(myCm.GenerateStringFromByteArray(MsgReceived));
-            OnGotMsg();
+            player.Display(myCm.Helper.GenerateStringFromByteArray(MsgReceived));
+            OnGotMsg(MsgReceived);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
+        private int GetMessageContent()
+        {
+            var msggot = myPort.ReadByte();
+            return msggot;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
+        private int GetMessageLength()
+        {
+            var length = myPort.BytesToRead;
+            return length;
         }
 
         protected virtual void OnGotEnq()
