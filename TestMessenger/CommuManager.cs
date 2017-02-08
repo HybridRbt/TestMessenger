@@ -108,9 +108,6 @@ namespace TestMessenger
             sender.SendEnq();
         }
 
-        public string GenerateStringFromByteArray(byte[] msg)
-        {
-            var result = "";
 
             for (int i = 0; i < msg.Length; i++)
             {
@@ -203,18 +200,6 @@ namespace TestMessenger
             var byteArray = GenerateRandomByteArray();
 
             msgQueue.Add(byteArray);
-        }
-
-        private byte[] GenerateRandomByteArray()
-        {
-            byte[] result = new byte[3];
-            var randomNum = new Random();
-            for (int i = 0; i < 3; i++)
-            {
-                result[i] = Convert.ToByte(randomNum.Next(0, 9));
-            }
-
-            return result;
         }
 
         private void GotMsg()
