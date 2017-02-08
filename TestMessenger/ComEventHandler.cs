@@ -25,7 +25,7 @@ namespace TestMessenger
 
         public event GotAckEventHandler GotAck;
 
-        public delegate void GotMsgEventHandler();
+        public delegate void GotMsgEventHandler(byte[] msgGot);
 
         public event GotMsgEventHandler GotMsg;
 
@@ -101,9 +101,9 @@ namespace TestMessenger
             GotAck?.Invoke();
         }
 
-        protected virtual void OnGotMsg()
+        protected virtual void OnGotMsg(byte[] msggot)
         {
-            GotMsg?.Invoke();
+            GotMsg?.Invoke(msggot);
         }
     }
 }
