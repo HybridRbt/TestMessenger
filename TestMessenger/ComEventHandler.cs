@@ -75,6 +75,9 @@ namespace TestMessenger
                         player.Display(Cmd.AckReceiveOk.ToString());
                         OnGotAck();
                         break;
+                    default:
+                        // TODO: add nak handler
+                        break;
                 }
                 return;
             }
