@@ -19,7 +19,7 @@ namespace TestMessenger
         {
             var msg = new byte[1];
             msg[0] = Cmd.EotReadyReceive;
-            SendMsg(msg);
+            SendMessage(msg);
             var player = new Player(myMw.EotSent);
             player.Display(Cmd.EotReadyReceive.ToString());
         }

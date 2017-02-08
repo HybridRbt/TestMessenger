@@ -21,7 +21,7 @@ namespace TestMessenger
         {
             byte[] msg = new byte[1];
             msg[0] = Cmd.EnqReadySend;
-            SendMsg(msg);
+            SendMessage(msg);
 
             var player = new Player(MyMainWindow.EnqSent);
             player.Display(Cmd.EnqReadySend.ToString());

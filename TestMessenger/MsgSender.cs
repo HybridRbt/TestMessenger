@@ -17,7 +17,7 @@ namespace TestMessenger
 
         public void SendMsg()
         {
-            SendMsg(myMsg);
+            SendMessage(myMsg);
             var player = new Player(MyMainWindow.MsgSent);
             var msgStr = GenerateStringFromByteArray(myMsg);
             player.Display(msgStr);
