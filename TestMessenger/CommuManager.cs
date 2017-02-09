@@ -15,19 +15,6 @@ namespace TestMessenger
     {
         /// <summary>
         /// </summary>
-        public enum CommunicationStages
-        {
-            Error,
-            Standby,
-            SentEnqWaitEot,
-            GotEot,
-            SentEotWaitContent,
-            SentContentWaitAck,
-            Busy
-        }
-
-        /// <summary>
-        /// </summary>
         public SerialPort MySerialPort { get; set; }
 
         private string MyPortName { get; set; }
