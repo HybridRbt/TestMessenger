@@ -94,8 +94,8 @@ namespace TestMessenger
             comEventHandler.GotAck += ReturnToStandby;
 
             Task.Factory.StartNew(() =>
-            {
-                if (ComState != CommunicationStages.Standby) return;
+            {              
+                if (!stateWatcher.CanSend()) return;
                 foreach (byte[] msg in msgQueue.GetConsumingEnumerable())
                 {
                     SendRequest(msg);
