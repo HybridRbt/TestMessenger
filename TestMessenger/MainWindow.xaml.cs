@@ -42,5 +42,20 @@ namespace TestMessenger
         {
             cm.StopAskSensor();
         }
+
+        private void EotReplyChkBox_OnClick(object sender, RoutedEventArgs e)
+        {
+            cm.EotReplyEnabled = EotReplyChkBox.IsChecked.Value;
+        }
+
+        private void MsgReplyChkBox_OnClick(object sender, RoutedEventArgs e)
+        {
+            cm.MsgReplyEnabled = MsgReplyChkBox.IsChecked.Value;
+        }
+
+        private void AckReplyChkBox_OnClick(object sender, RoutedEventArgs e)
+        {
+            cm.AckReplyEnabled = AckReplyChkBox.IsChecked.Value;
+        }
     }
 }

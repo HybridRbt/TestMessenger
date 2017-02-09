@@ -33,9 +33,7 @@ namespace TestMessenger
 
         private Parity MyParity { get; set; }
 
-        /// <summary>
-        /// </summary>
-        public CommunicationStages ComState { get; set; }
+        public bool EotReplyEnabled { get; set; }
 
         private MainWindow myMainWindow;
         private TextBox myTb;
@@ -155,23 +153,29 @@ namespace TestMessenger
         /// </summary>
         private void SendAck()
         {
+            if (!AckReplyEnabled) return;
             var sender = new AckSender(this, myMainWindow);
             sender.SendAck();
         }
+
+        public bool AckReplyEnabled { get; set; }
 
         /// <summary>
         /// </summary>
         private void SendMsg()
         {
+            if (!MsgReplyEnabled) return;
             var sender = new MsgSender(this, _nextMsg, myMainWindow);
             sender.SendMsg();
         }
+
+        public bool MsgReplyEnabled { get; set; }
 
         /// <summary>
         /// </summary>
         private void SendEot()
         {
-            ComState = CommunicationStages.Busy;
+            if (!EotReplyEnabled) return;
             var sender = new EotSender(this, myMainWindow);
             sender.SendEot();
         }
