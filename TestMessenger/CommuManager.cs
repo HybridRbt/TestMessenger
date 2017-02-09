@@ -46,6 +46,8 @@ namespace TestMessenger
         private byte[] _nextMsg;
         private CancellationTokenSource cancelAskSensor;
 
+        private CommunicationStateWatcher stateWatcher;
+
         /// <summary>
         /// </summary>
         /// <param name="port"></param>
@@ -57,9 +59,6 @@ namespace TestMessenger
 
             myTb = mainWindow.DisplayWindow;
             myTb.Text += "Initializing...\n";
-            
-            ComState = CommunicationStages.Standby;
-            myTb.Text += "Current commu stage: " + ComState + "\n";
 
             cancelAskSensor = new CancellationTokenSource();
 
@@ -83,6 +82,12 @@ namespace TestMessenger
             {
                 MySerialPort.Open();
             }
+
+            stateWatcher = new CommunicationStateWatcher();
+            stateWatcher.StateTimeout += HandleStateTimeout;
+
+            var currentState = stateWatcher.CurrentState;
+            myTb.Text += "Current commu stage: " + currentState + "\n";
 
             comEventHandler = new ComEventHandler(this, myMainWindow);
             comEventHandler.GotEnq += SendEot;
