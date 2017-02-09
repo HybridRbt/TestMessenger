@@ -6,7 +6,7 @@ using System.Text;
 
 namespace TestMessenger
 {
-    class MsgSender: Msgr
+    class MsgSender: MessageSender
     {
         private byte[] myMsg;
 
@@ -17,7 +17,7 @@ namespace TestMessenger
 
         public void SendMsg()
         {
-            SendMsg(myMsg);
+            SendMessage(myMsg);
             var player = new Player(MyMainWindow.MsgSent);
             var msgStr = GenerateStringFromByteArray(myMsg);
             player.Display(msgStr);

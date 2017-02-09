@@ -59,12 +59,16 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ComEventHandler.cs" />
+    <Compile Include="CommunicationStages.cs" />
     <Compile Include="EnqSender.cs" />
     <Compile Include="EotSender.cs" />
     <Compile Include="AckSender.cs" />
+    <Compile Include="Helper.cs" />
+    <Compile Include="IMessageSender.cs" />
     <Compile Include="MsgSender.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="SendManager.cs" />
+    <Compile Include="CommunicationStateWatcher.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -73,16 +77,15 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Cmd.cs" />
+    <Compile Include="Command.cs" />
     <Compile Include="CommuManager.cs" />
-    <Compile Include="IMsgr.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Msgr.cs" />
+    <Compile Include="MessageSender.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

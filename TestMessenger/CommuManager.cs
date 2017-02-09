@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,19 +9,18 @@ namespace TestMessenger
 {
     using System.Windows.Controls;
 
-    class CommuManager
+    /// <summary>
+    /// </summary>
+    public class CommuManager
     {
-        public enum CommunicationStages
-        {
-            Error,
-            Standby,
-            Busy
-        }
-
+        /// <summary>
+        /// </summary>
         public SerialPort MySerialPort { get; set; }
 
         private string MyPortName { get; set; }
 
+        /// <summary>
+        /// </summary>
         public int MyBaudRate { get; set; }
 
         private int MyWriteTimeout { get; set; }
@@ -32,7 +32,8 @@ namespace TestMessenger
         private int MyDataBits { get; set; }
 
         private Parity MyParity { get; set; }
-        public CommunicationStages ComState { get; set; }
+
+        public bool EotReplyEnabled { get; set; }
 
         private MainWindow myMainWindow;
         private TextBox myTb;
@@ -43,6 +44,12 @@ namespace TestMessenger
         private byte[] _nextMsg;
         private CancellationTokenSource cancelAskSensor;
 
+        private CommunicationStateWatcher stateWatcher;
+
+        /// <summary>
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="mainWindow"></param>
         public CommuManager(string port, MainWindow mainWindow)
         {
             msgQueue = new BlockingCollection<byte[]>();
@@ -50,9 +57,6 @@ namespace TestMessenger
 
             myTb = mainWindow.DisplayWindow;
             myTb.Text += "Initializing...\n";
-            
-            ComState = CommunicationStages.Standby;
-            myTb.Text += "Current commu stage: " + ComState + "\n";
 
             cancelAskSensor = new CancellationTokenSource();
 
@@ -77,15 +81,21 @@ namespace TestMessenger
                 MySerialPort.Open();
             }
 
+            stateWatcher = new CommunicationStateWatcher();
+            stateWatcher.StateTimeout += HandleStateTimeout;
+
+            var currentState = stateWatcher.CurrentState;
+            myTb.Text += "Current commu stage: " + currentState + "\n";
+
             comEventHandler = new ComEventHandler(this, myMainWindow);
             comEventHandler.GotEnq += SendEot;
-            comEventHandler.GotEot += SendMsg;
+            comEventHandler.GotEot += SendContent;
             comEventHandler.GotMsg += ReceiveMsg;
             comEventHandler.GotAck += ReturnToStandby;
 
             Task.Factory.StartNew(() =>
-            {
-                if (ComState != CommunicationStages.Standby) return;
+            {              
+                if (!stateWatcher.CanSend()) return;
                 foreach (byte[] msg in msgQueue.GetConsumingEnumerable())
                 {
                     SendRequest(msg);
@@ -95,57 +105,133 @@ namespace TestMessenger
             MySerialPort.ErrorReceived += MySerialPort_ErrorReceived;
         }
 
-        private void ReturnToStandby()
+        private void HandleStateTimeout()
         {
-            SentSuccess();
-            ComState = CommunicationStages.Standby;
+            var currentState = stateWatcher.CurrentState;
+            var currentStatus = stateWatcher.CurrentStatus;
+            var player = new Player(myMainWindow.DisplayWindow);
+            var msg = $"State Time out at {currentState}! Current status is {currentStatus}, ";
+
+            if (currentStatus == CommunicationStages.Status.Normal)
+            {
+                msg += "back to normal";
+                player.Display(msg);
+                return;  // can't retry any more
+            }
+
+            if (currentStatus == CommunicationStages.Status.Failed3)
+            {
+                msg += "no more retry";
+                player.Display(msg);
+                return;  // can't retry any more
+            }
+
+            // otherwise retry
+            switch (CommunicationStages.LastTrigger)
+            {
+                case CommunicationStages.Triggers.SentEot:
+                    msg += "will retry send eot";
+                    player.Display(msg);
+                    SendEot();
+                    break;
+                case CommunicationStages.Triggers.SentAck:
+                    msg += "will retry send ack";
+                    player.Display(msg);
+                    SendAck();
+                    break;
+                case CommunicationStages.Triggers.SentContent:
+                    msg += "will retry send content";
+                    player.Display(msg);
+                    SendContent();
+                    break;
+                case CommunicationStages.Triggers.SentEnq:
+                    msg += "will retry send enq";
+                    player.Display(msg);
+                    SendEnq();
+                    break;
+                case CommunicationStages.Triggers.GotAck:
+                    break;
+            }
         }
 
-        private void SendRequest(byte[] msg)
+        private void SendEnq()
         {
-            _nextMsg = msg;
             var sender = new EnqSender(this, myMainWindow);
             sender.SendEnq();
         }
 
-        public string GenerateStringFromByteArray(byte[] msg)
-        {
-            var result = "";
-
-            for (int i = 0; i < msg.Length; i++)
-            {
-                result += msg[i].ToString();
-            }
-
-            return result;
-        }
-
-        private void ReceiveMsg()
+        /// <summary>
+        /// </summary>
+        /// <param name="msggot"></param>
+        private void ReceiveMsg(byte[] msggot)
         {
             GotMsg();
-            var msgStr = GenerateStringFromByteArray(comEventHandler.MsgReceived);
+            var msgStr = Helper.GenerateStringFromByteArray(msggot);
             var player = new Player(myMainWindow.MsgGot);
             player.Display(msgStr);
             SendAck();
         }
 
+        /// <summary>
+        /// </summary>
+        private void ReturnToStandby()
+        {
+            SentSuccess();
+            stateWatcher.ChangeState(CommunicationStages.Triggers.GotAck);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.GotAck;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="msg"></param>
+        private void SendRequest(byte[] msg)
+        {
+            _nextMsg = msg;
+            SendEnq();
+            
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentEnq);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentEnq;
+        }
+
+        /// <summary>
+        /// </summary>
         private void SendAck()
         {
+            if (!AckReplyEnabled) return;
             var sender = new AckSender(this, myMainWindow);
             sender.SendAck();
+
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentAck);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentAck;
         }
 
-        private void SendMsg()
+        public bool AckReplyEnabled { get; set; }
+
+        /// <summary>
+        /// </summary>
+        private void SendContent()
         {
+            if (!MsgReplyEnabled) return;
             var sender = new MsgSender(this, _nextMsg, myMainWindow);
             sender.SendMsg();
+
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentContent);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentContent;
         }
 
+        public bool MsgReplyEnabled { get; set; }
+
+        /// <summary>
+        /// </summary>
         private void SendEot()
         {
-            ComState = CommunicationStages.Busy;
+            if (!EotReplyEnabled) return;
+            //ComState = CommunicationStages.Busy;
             var sender = new EotSender(this, myMainWindow);
             sender.SendEot();
+
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentEot);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentEot;
         }
 
         private void MySerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
@@ -153,7 +239,14 @@ namespace TestMessenger
             throw new NotImplementedException();
         }
 
-        // The `onTick` method will be called periodically unless cancelled.
+        /// <summary>
+        /// The `<paramref name="onTick"/>` method will be called periodically unless canceled.
+        /// </summary>
+        /// <param name="onTick"></param>
+        /// <param name="dueTime"></param>
+        /// <param name="interval"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
         private static async Task RunPeriodicAsync(Action onTick,
                                                    TimeSpan dueTime,
                                                    TimeSpan interval,
@@ -163,7 +256,7 @@ namespace TestMessenger
             if (dueTime > TimeSpan.Zero)
                 await Task.Delay(dueTime, token);
 
-            // Repeat this loop until cancelled.
+            // Repeat this loop until canceled.
             while (!token.IsCancellationRequested)
             {
                 // Call our onTick function.
@@ -175,12 +268,13 @@ namespace TestMessenger
             }
         }
 
+        /// <summary>
+        /// </summary>
         private async void InitializeAskSensorTask()
         {
             var dueTime = TimeSpan.FromSeconds(1);
             var interval = TimeSpan.FromMilliseconds(500);
 
-            // TODO: Add a CancellationTokenSource and supply the token here instead of None.
             try
             {
                 await RunPeriodicAsync(OnAskSensorTick, dueTime, interval, cancelAskSensor.Token);
@@ -188,47 +282,46 @@ namespace TestMessenger
             catch (OperationCanceledException e)
             {
                 var player = new Player(myMainWindow.DisplayWindow);
-                player.Display("Ask sensor cancelled.");
+                player.Display("Ask sensor canceled.");
             }
         }
 
+        /// <summary>
+        /// </summary>
         public void StartAskSensor()
         {
             cancelAskSensor = new CancellationTokenSource();
             InitializeAskSensorTask();
         }
 
-        public void OnAskSensorTick()
+        /// <summary>
+        /// </summary>
+        private void OnAskSensorTick()
         {
-            var byteArray = GenerateRandomByteArray();
+            var byteArray = TestMessenger.Helper.GenerateRandomByteArray();
 
             msgQueue.Add(byteArray);
         }
 
-        private byte[] GenerateRandomByteArray()
-        {
-            byte[] result = new byte[3];
-            var randomNum = new Random();
-            for (int i = 0; i < 3; i++)
-            {
-                result[i] = Convert.ToByte(randomNum.Next(0, 9));
-            }
-
-            return result;
-        }
-
+        /// <summary>
+        /// </summary>
         private void GotMsg()
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Got Msg Success!");
         }
 
+        /// <summary>
+        /// </summary>
         private void SentSuccess()
         {
             var player = new Player(myMainWindow.DisplayWindow);
             player.Display("Sent Msg Success!");
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="msg"></param>
         public void Send(byte[] msg)
         {
             msgQueue.Add(msg);
@@ -258,6 +351,8 @@ namespace TestMessenger
             //MySerialPort.DiscardOutBuffer();
         }
 
+        /// <summary>
+        /// </summary>
         public void StopAskSensor()
         {
             cancelAskSensor.Cancel();

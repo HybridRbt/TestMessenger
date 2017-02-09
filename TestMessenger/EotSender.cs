@@ -6,7 +6,7 @@ using System.Text;
 
 namespace TestMessenger
 {
-    class EotSender: Msgr
+    class EotSender: MessageSender
     {
         private MainWindow myMw;
 
@@ -18,10 +18,10 @@ namespace TestMessenger
         public void SendEot()
         {
             var msg = new byte[1];
-            msg[0] = Cmd.EotReadyReceive;
-            SendMsg(msg);
+            msg[0] = Command.EotReadyReceive;
+            SendMessage(msg);
             var player = new Player(myMw.EotSent);
-            player.Display(Cmd.EotReadyReceive.ToString());
+            player.Display(Command.EotReadyReceive.ToString());
         }
     }
 }

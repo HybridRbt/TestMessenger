@@ -25,12 +25,18 @@ namespace TestMessenger
 
         public event GotAckEventHandler GotAck;
 
-        public delegate void GotMsgEventHandler();
+        public delegate void GotMsgEventHandler(byte[] msgGot);
 
         public event GotMsgEventHandler GotMsg;
 
+        /// <summary>
+        /// </summary>
         public byte[] MsgReceived { get; set; }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="cm"></param>
+        /// <param name="mw"></param>
         public ComEventHandler(CommuManager cm, MainWindow mw)
         {
             myCm = cm;
@@ -39,31 +45,38 @@ namespace TestMessenger
             myMw = mw;
         }
 
-        public void Receive(object sender, SerialDataReceivedEventArgs e)
+        /// <summary>
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Receive(object sender, SerialDataReceivedEventArgs e)
         {
-            var length = myPort.BytesToRead;
+            var length = GetMessageLength();
             Player player;
 
             if (length == 1) //it's ENQ/EOT/ACK
             {
-                var msggot = myPort.ReadByte();
+                var msggot = GetMessageContent();
 
                 switch (msggot)
                 {
-                    case Cmd.EnqReadySend:
+                    case Command.EnqReadySend:
                         player = new Player(myMw.EnqGot);
-                        player.Display(Cmd.EnqReadySend.ToString());
+                        player.Display(Command.EnqReadySend.ToString());
                         OnGotEnq();
                         break;
-                    case Cmd.EotReadyReceive:
+                    case Command.EotReadyReceive:
                         player = new Player(myMw.EotGot);
-                        player.Display(Cmd.EotReadyReceive.ToString());
+                        player.Display(Command.EotReadyReceive.ToString());
                         OnGotEot();
                         break;
-                    case Cmd.AckReceiveOk:
+                    case Command.AckReceiveOk:
                         player = new Player(myMw.AckGot);
-                        player.Display(Cmd.AckReceiveOk.ToString());
+                        player.Display(Command.AckReceiveOk.ToString());
                         OnGotAck();
+                        break;
+                    default:
+                        // TODO: add nak handler
                         break;
                 }
                 return;
@@ -72,8 +85,26 @@ namespace TestMessenger
             player = new Player(myMw.MsgGot);
             MsgReceived = new byte[length];
             myPort.Read(MsgReceived, 0, length);
-            player.Display(myCm.GenerateStringFromByteArray(MsgReceived));
-            OnGotMsg();
+            player.Display(Helper.GenerateStringFromByteArray(MsgReceived));
+            OnGotMsg(MsgReceived);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
+        private int GetMessageContent()
+        {
+            var msggot = myPort.ReadByte();
+            return msggot;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns></returns>
+        private int GetMessageLength()
+        {
+            var length = myPort.BytesToRead;
+            return length;
         }
 
         protected virtual void OnGotEnq()
@@ -91,9 +122,9 @@ namespace TestMessenger
             GotAck?.Invoke();
         }
 
-        protected virtual void OnGotMsg()
+        protected virtual void OnGotMsg(byte[] msggot)
         {
-            GotMsg?.Invoke();
+            GotMsg?.Invoke(msggot);
         }
     }
 }
