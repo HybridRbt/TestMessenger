@@ -105,6 +105,55 @@ namespace TestMessenger
             MySerialPort.ErrorReceived += MySerialPort_ErrorReceived;
         }
 
+        private void HandleStateTimeout()
+        {
+            var currentState = stateWatcher.CurrentState;
+            var currentStatus = stateWatcher.CurrentStatus;
+            var player = new Player(myMainWindow.DisplayWindow);
+            var msg = $"State Time out at {currentState}! Current status is {currentStatus}, ";
+
+            if (currentStatus == CommunicationStages.Status.Normal)
+            {
+                msg += "back to normal";
+                player.Display(msg);
+                return;  // can't retry any more
+            }
+
+            if (currentStatus == CommunicationStages.Status.Failed3)
+            {
+                msg += "no more retry";
+                player.Display(msg);
+                return;  // can't retry any more
+            }
+
+            // otherwise retry
+            switch (CommunicationStages.LastTrigger)
+            {
+                case CommunicationStages.Triggers.SentEot:
+                    msg += "will retry send eot";
+                    player.Display(msg);
+                    SendEot();
+                    break;
+                case CommunicationStages.Triggers.SentAck:
+                    msg += "will retry send ack";
+                    player.Display(msg);
+                    SendAck();
+                    break;
+                case CommunicationStages.Triggers.SentContent:
+                    msg += "will retry send content";
+                    player.Display(msg);
+                    SendContent();
+                    break;
+                case CommunicationStages.Triggers.SentEnq:
+                    msg += "will retry send enq";
+                    player.Display(msg);
+                    SendEnq();
+                    break;
+                case CommunicationStages.Triggers.GotAck:
+                    break;
+            }
+        }
+
         private void SendEnq()
         {
             var sender = new EnqSender(this, myMainWindow);
