@@ -89,7 +89,7 @@ namespace TestMessenger
 
             comEventHandler = new ComEventHandler(this, myMainWindow);
             comEventHandler.GotEnq += SendEot;
-            comEventHandler.GotEot += SendMsg;
+            comEventHandler.GotEot += SendContent;
             comEventHandler.GotMsg += ReceiveMsg;
             comEventHandler.GotAck += ReturnToStandby;
 
@@ -162,7 +162,7 @@ namespace TestMessenger
 
         /// <summary>
         /// </summary>
-        private void SendMsg()
+        private void SendContent()
         {
             if (!MsgReplyEnabled) return;
             var sender = new MsgSender(this, _nextMsg, myMainWindow);
