@@ -128,7 +128,8 @@ namespace TestMessenger
         private void ReturnToStandby()
         {
             SentSuccess();
-            ComState = CommunicationStages.Standby;
+            stateWatcher.ChangeState(CommunicationStages.Triggers.GotAck);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.GotAck;
         }
 
         /// <summary>
@@ -138,6 +139,9 @@ namespace TestMessenger
         {
             _nextMsg = msg;
             SendEnq();
+            
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentEnq);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentEnq;
         }
 
         /// <summary>
@@ -147,6 +151,9 @@ namespace TestMessenger
             if (!AckReplyEnabled) return;
             var sender = new AckSender(this, myMainWindow);
             sender.SendAck();
+
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentAck);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentAck;
         }
 
         public bool AckReplyEnabled { get; set; }
@@ -158,6 +165,9 @@ namespace TestMessenger
             if (!MsgReplyEnabled) return;
             var sender = new MsgSender(this, _nextMsg, myMainWindow);
             sender.SendMsg();
+
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentContent);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentContent;
         }
 
         public bool MsgReplyEnabled { get; set; }
@@ -167,8 +177,12 @@ namespace TestMessenger
         private void SendEot()
         {
             if (!EotReplyEnabled) return;
+            //ComState = CommunicationStages.Busy;
             var sender = new EotSender(this, myMainWindow);
             sender.SendEot();
+
+            stateWatcher.ChangeState(CommunicationStages.Triggers.SentEot);
+            CommunicationStages.LastTrigger = CommunicationStages.Triggers.SentEot;
         }
 
         private void MySerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
