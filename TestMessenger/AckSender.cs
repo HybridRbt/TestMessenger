@@ -3,7 +3,7 @@ using System.IO.Ports;
 
 namespace TestMessenger
 {
-    class AckSender: Msgr
+    class AckSender: MessageSender
     {
         public AckSender(CommuManager cm, MainWindow mw) : base(cm, mw)
         {
@@ -12,11 +12,11 @@ namespace TestMessenger
         public void SendAck()
         {
             byte[] msg = new byte[1];
-            msg[0] = Cmd.AckReceiveOk;
+            msg[0] = Command.AckReceiveOk;
             SendMessage(msg);
 
             var player = new Player(MyMainWindow.AckSent);
-            player.Display(Cmd.AckReceiveOk.ToString());
+            player.Display(Command.AckReceiveOk.ToString());
         }
     }
 }

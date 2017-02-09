@@ -20,11 +20,11 @@ namespace TestMessenger
         public void SendEnq()
         {
             byte[] msg = new byte[1];
-            msg[0] = Cmd.EnqReadySend;
+            msg[0] = Command.EnqReadySend;
             SendMessage(msg);
 
             var player = new Player(MyMainWindow.EnqSent);
-            player.Display(Cmd.EnqReadySend.ToString());
+            player.Display(Command.EnqReadySend.ToString());
         }
     }
 }

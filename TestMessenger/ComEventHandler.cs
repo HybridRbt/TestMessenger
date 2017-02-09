@@ -85,7 +85,7 @@ namespace TestMessenger
             player = new Player(myMw.MsgGot);
             MsgReceived = new byte[length];
             myPort.Read(MsgReceived, 0, length);
-            player.Display(myCm.Helper.GenerateStringFromByteArray(MsgReceived));
+            player.Display(Helper.GenerateStringFromByteArray(MsgReceived));
             OnGotMsg(MsgReceived);
         }
 
