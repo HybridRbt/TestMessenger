@@ -105,6 +105,12 @@ namespace TestMessenger
             MySerialPort.ErrorReceived += MySerialPort_ErrorReceived;
         }
 
+        private void SendEnq()
+        {
+            var sender = new EnqSender(this, myMainWindow);
+            sender.SendEnq();
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="msggot"></param>
@@ -131,22 +137,7 @@ namespace TestMessenger
         private void SendRequest(byte[] msg)
         {
             _nextMsg = msg;
-            var sender = new EnqSender(this, myMainWindow);
-            sender.SendEnq();
-
-            // will allow 100 ms for response
-            TimeSpan maxDuration = TimeSpan.FromMilliseconds(100);
-            Stopwatch sw = Stopwatch.StartNew();
-
-            while (sw.Elapsed < maxDuration)
-            {
-                // wait for the ComState to change
-                if (ComState == CommunicationStages.GotEot)
-                    break;
-            }
-
-            // timeout 
-
+            SendEnq();
         }
 
         /// <summary>
