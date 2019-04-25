@@ -82,10 +82,10 @@ namespace TestMessenger
                 return;
             }
 
-            player = new Player(myMw.MsgGot);
+            //player = new Player(myMw.MsgGot);
             MsgReceived = new byte[length];
             myPort.Read(MsgReceived, 0, length);
-            player.Display(Helper.GenerateStringFromByteArray(MsgReceived));
+            //player.Display(Helper.GenerateStringFromByteArray(MsgReceived));
             OnGotMsg(MsgReceived);
         }
 
