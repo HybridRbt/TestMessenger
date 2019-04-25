@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
 
@@ -56,6 +57,20 @@ namespace TestMessenger
         private void AckReplyChkBox_OnClick(object sender, RoutedEventArgs e)
         {
             cm.AckReplyEnabled = AckReplyChkBox.IsChecked.Value;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var msgLog = "";
+
+            foreach (byte[] msg in cm.InMsgQueue)
+            {
+                msgLog += Helper.GenerateStringFromByteArray(msg);
+                msgLog += "\n";
+            }
+
+            MsgLog.TextWrapping = TextWrapping.Wrap;
+            MsgLog.Text = msgLog;
         }
     }
 }
