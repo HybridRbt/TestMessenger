@@ -38,8 +38,8 @@ namespace TestMessenger
         private MainWindow myMainWindow;
         private TextBox myTb;
         private EnqSender MsgChecker;
-        private BlockingCollection<byte[]> msgQueue;
-
+        private BlockingCollection<byte[]> OutMsgQueue;
+        public BlockingCollection<byte[]> InMsgQueue;
         private ComEventHandler comEventHandler;
         private byte[] _nextMsg;
         private CancellationTokenSource cancelAskSensor;
@@ -52,7 +52,9 @@ namespace TestMessenger
         /// <param name="mainWindow"></param>
         public CommuManager(string port, MainWindow mainWindow)
         {
-            msgQueue = new BlockingCollection<byte[]>();
+            OutMsgQueue = new BlockingCollection<byte[]>();
+            InMsgQueue = new BlockingCollection<byte[]>();
+
             myMainWindow = mainWindow;
 
             myTb = mainWindow.DisplayWindow;
@@ -96,7 +98,7 @@ namespace TestMessenger
             Task.Factory.StartNew(() =>
             {              
                 if (!stateWatcher.CanSend()) return;
-                foreach (byte[] msg in msgQueue.GetConsumingEnumerable())
+                foreach (byte[] msg in OutMsgQueue.GetConsumingEnumerable())
                 {
                     SendRequest(msg);
                 }
@@ -166,9 +168,10 @@ namespace TestMessenger
         private void ReceiveMsg(byte[] msggot)
         {
             GotMsg();
-            var msgStr = Helper.GenerateStringFromByteArray(msggot);
-            var player = new Player(myMainWindow.MsgGot);
-            player.Display(msgStr);
+            //var msgStr = Helper.GenerateStringFromByteArray(msggot);
+            //var player = new Player(myMainWindow.MsgGot);
+            //player.Display(msgStr);
+            InMsgQueue.Add(msggot);
             SendAck();
         }
 
@@ -300,7 +303,7 @@ namespace TestMessenger
         {
             var byteArray = TestMessenger.Helper.GenerateRandomByteArray();
 
-            msgQueue.Add(byteArray);
+            OutMsgQueue.Add(byteArray);
         }
 
         /// <summary>
@@ -324,7 +327,7 @@ namespace TestMessenger
         /// <param name="msg"></param>
         public void Send(byte[] msg)
         {
-            msgQueue.Add(msg);
+            OutMsgQueue.Add(msg);
         }
 
         private void SendFailed(byte[] msg)
